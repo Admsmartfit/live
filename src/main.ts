@@ -32,6 +32,8 @@ registrarPainel(app, {
   caminhoEnv: resolve(process.cwd(), '.env'),
   caminhoTemplates,
   db,
+  campanhaId,
+  envInicial: env,
   // No painel, falha aparece na hora (sem as repetições usadas pelo envio).
   criarEvolution: (e) => createEvolutionClient({ ...e, EVOLUTION_MAX_RETRIES: 0 }),
   sair: (codigo) => {

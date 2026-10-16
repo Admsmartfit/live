@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sessoes } from '../../src/admin/auth.js';
 import { registrarPainel, type ClientePainel } from '../../src/admin/routes.js';
 import { atualizarTextoEnv, lerArquivoEnv } from '../../src/config/arquivoEnv.js';
-import { abrirBanco } from '../../src/db/repo.js';
+import { envSchema, parseEnv } from '../../src/config/env.js';
+import { abrirBanco, garantirCampanha } from '../../src/db/repo.js';
 import { EvolutionError } from '../../src/evolution/errors.js';
 
 const SENHA = 'senha-de-teste-123';
@@ -56,10 +57,14 @@ describe('painel', () => {
     };
     sair = vi.fn<(codigo: number) => void>();
     app = Fastify();
+    const db = abrirBanco(':memory:');
+    const campanhaId = garantirCampanha(db, { nome: 'teste', dataLimite: '2026-10-31', hoje: '2026-10-16' });
     registrarPainel(app, {
       caminhoEnv,
       caminhoTemplates: () => resolve('templates'),
-      db: abrirBanco(':memory:'),
+      db,
+      campanhaId,
+      envInicial: parseEnv(envSchema, lerArquivoEnv(caminhoEnv)),
       criarEvolution: () => cliente as unknown as ClientePainel,
       sair,
       sessoes: new Sessoes(),
@@ -116,14 +121,14 @@ describe('painel', () => {
   });
 
   it('salva no .env, mantém o token se vier vazio e valida antes de gravar', async () => {
-    const ok = await chamar('POST', 'config', { baseUrl: 'https://outra.test', instancia: 'loja 2', apiKey: '', dailyLimit: '25' });
+    const ok = await chamar('POST', 'config', { valores: { EVOLUTION_BASE_URL: 'https://outra.test', EVOLUTION_INSTANCE: 'loja 2', EVOLUTION_API_KEY: '', DAILY_LIMIT: '25' } });
     expect(ok.statusCode).toBe(200);
     const arq = lerArquivoEnv(caminhoEnv);
     expect(arq).toMatchObject({ EVOLUTION_BASE_URL: 'https://outra.test', EVOLUTION_INSTANCE: 'loja 2', EVOLUTION_API_KEY: CHAVE, DAILY_LIMIT: '25' });
     expect(readFileSync(caminhoEnv, 'utf8')).toContain('# comentário mantido');
 
     const antes = readFileSync(caminhoEnv, 'utf8');
-    const ruim = await chamar('POST', 'config', { baseUrl: 'não é url', instancia: 'x' });
+    const ruim = await chamar('POST', 'config', { valores: { EVOLUTION_BASE_URL: 'não é url' } });
     expect(ruim.statusCode).toBe(400);
     expect(readFileSync(caminhoEnv, 'utf8')).toBe(antes);
   });
@@ -156,9 +161,26 @@ describe('painel', () => {
 
   it('registra o webhook só com endereço público', async () => {
     expect((await chamar('POST', 'webhook/registrar')).statusCode).toBe(400);
-    await chamar('POST', 'config', { baseUrl: 'https://evolution.exemplo.test', instancia: 'ao vivo vv', publicBaseUrl: 'https://campanha.exemplo.test' });
+    await chamar('POST', 'config', { valores: { PUBLIC_BASE_URL: 'https://campanha.exemplo.test' } });
     expect((await chamar('POST', 'webhook/registrar')).statusCode).toBe(200);
     expect(cliente.setWebhook).toHaveBeenCalledWith({ url: `https://campanha.exemplo.test/webhook/${'t'.repeat(32)}` });
+  });
+
+  it('resumo e fila descrevem a situação da campanha', async () => {
+    const r = (await chamar('GET', 'resumo')).json<Record<string, Record<string, unknown>>>();
+    expect(r.campanha).toMatchObject({ ativa: false, simulacao: true, dataFim: '2026-10-31' });
+    expect(r.base).toMatchObject({ total: 0 });
+    expect(r).toMatchObject({ testesEnviados: 0, webhookInformado: false, reinicioPendente: false });
+    const f = (await chamar('GET', 'fila?n=10')).json<{ itens: unknown[] }>();
+    expect(f.itens).toEqual([]);
+  });
+
+  it('ligar a campanha fica salvo e pede reinício', async () => {
+    const ok = await chamar('POST', 'config', { valores: { CAMPANHA_ATIVA: 'true', DRY_RUN: 'true', TEST_ALLOWLIST: '5527988776655' } });
+    expect(ok.json()).toMatchObject({ ok: true, reinicioPendente: true });
+    expect(lerArquivoEnv(caminhoEnv)).toMatchObject({ CAMPANHA_ATIVA: 'true', TEST_ALLOWLIST: '5527988776655' });
+    expect((await chamar('GET', 'config')).json()).toMatchObject({ campanha: { ativa: true, allowlist: ['5527988776655'] }, reinicioPendente: true });
+    expect((await chamar('POST', 'config', { valores: { CHAVE_DESCONHECIDA: 'x' } })).statusCode).toBe(400);
   });
 
   it('reiniciar encerra o processo com código de falha (o serviço volta sozinho)', async () => {
