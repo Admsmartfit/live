@@ -1,0 +1,1 @@
+{Oi|Olá} {{nome}}! {{loja}} {aqui|falando}. {Estamos fechando|Vamos encerrar} a loja em {{data_fim}} e {tem|liberamos} um voucher {de até 50% off|com até 50% de desconto} para {clientes|você}. {Quer receber?|Te envio?}

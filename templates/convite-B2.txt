@@ -1,0 +1,1 @@
+{Oi|Olá|Ei} {{nome}}, {tudo bem|como vai}? {Aviso rápido|Recado rápido} da {{vendedora}}, da {{loja}}: {a loja vai fechar em {{data_fim}}|vamos encerrar a loja em {{data_fim}}} e {liberamos|tem} um voucher {de despedida|especial} {só para quem já é cliente|para clientes da loja}. {São|É} *35% em coleção nova e permanentes* e *50% no restante*. {Quer o seu?|Posso te passar?}
