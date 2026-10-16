@@ -197,6 +197,15 @@ textarea { min-height: 170px; resize: vertical; }
 .balao { align-self: flex-end; max-width: 88%; background: var(--whats-balao); color: var(--texto); padding: 7px 9px 5px; border-radius: 10px 0 10px 10px; font-size: 14px; line-height: 1.38; box-shadow: 0 1px .5px rgba(0,0,0,.13); word-wrap: break-word; }
 .balao .hora { display: block; text-align: right; font-size: 11px; color: var(--suave); margin-top: 2px; }
 .balao .hora svg { width: 15px; height: 15px; vertical-align: -3px; stroke: #53bdeb; }
+.balao.cliente { align-self: flex-start; background: var(--superficie); border-radius: 0 10px 10px 10px; }
+.balao img { display: block; max-width: 100%; border-radius: 8px; margin-bottom: 5px; }
+.zona-imagem { display: grid; place-items: center; min-height: 220px; border: 2px dashed var(--borda); border-radius: 14px; background: var(--superficie-2); text-align: center; padding: 16px; color: var(--suave); cursor: pointer; }
+.zona-imagem:hover, .zona-imagem.arrastando { border-color: var(--marca); color: var(--marca); }
+.zona-imagem img { max-width: 100%; max-height: 360px; border-radius: 10px; box-shadow: var(--sombra); }
+.fluxo { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.fluxo li { display: flex; gap: 12px; align-items: flex-start; font-size: 13.5px; }
+.fluxo li b { display: block; font-size: 14px; }
+.fluxo li span { color: var(--suave); }
 .balao.vazio-balao { align-self: center; background: rgba(255,255,255,.75); color: #54656f; border-radius: 10px; font-size: 13px; text-align: center; }
 
 /* avisos flutuantes */
@@ -252,6 +261,9 @@ textarea { min-height: 170px; resize: vertical; }
       <button data-ir="conexao"><svg class="ic" viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Conexão</button>
       <button data-ir="campanha"><svg class="ic" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Campanha</button>
       <button data-ir="teste"><svg class="ic" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>Testar mensagem</button>
+      <button data-ir="respostas"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>Respostas</button>
+      <button data-ir="voucher"><svg class="ic" viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 0 0 6v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3a2 2 0 0 0 0-6V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg>Voucher</button>
+      <button data-ir="bloqueados"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>Bloqueados</button>
       <button data-ir="fila"><svg class="ic" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Fila de envio</button>
     </nav>
     <div class="lateral-rodape">
@@ -348,7 +360,9 @@ textarea { min-height: 170px; resize: vertical; }
           <p class="sub">A Evolution avisa este programa quando um cliente responde.</p>
           <label class="rotulo">Caminho do webhook</label>
           <div class="campo-acao"><div class="codigo" id="caminhoWebhook" style="flex:1"></div><button class="btn" type="button" data-copiar="caminhoWebhook" aria-label="Copiar caminho">Copiar</button></div>
-          <p class="dica" id="dicaRede"></p>
+          <label class="rotulo">URL para colar na Evolution (mesma rede)</label>
+          <div id="urlsLocais"></div>
+          <p class="dica">Use a do IP da mesma rede da Evolution (ex.: 192.168.0.x).</p>
           <label class="rotulo" for="publicBaseUrl">Endereço público deste computador (opcional)</label>
           <input id="publicBaseUrl" type="url" placeholder="https://campanha.seudominio.com">
           <p class="dica">Com endereço público (https), o painel registra o webhook direto na Evolution.</p>
@@ -480,6 +494,112 @@ textarea { min-height: 170px; resize: vertical; }
       </div>
     </section>
 
+    <!-- ===== RESPOSTAS ===== -->
+    <section data-pagina="respostas" class="oculto">
+      <div class="cabecalho">
+        <div><h1>Respostas recebidas</h1><p>Confira se o webhook está chegando e como cada resposta foi entendida.</p></div>
+        <span class="pilula info">Ao vivo · atualiza a cada 5 s</span>
+      </div>
+      <div class="grade g3">
+        <div class="cartao">
+          <div class="kpi-topo"><span class="kpi-rotulo">Webhook neste programa</span><div class="icone-redondo"><svg class="ic" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div></div>
+          <div class="kpi-valor" id="rStatus"><span class="pilula">Aguardando…</span></div>
+          <div class="kpi-detalhe" id="rUltimo">Nenhum evento recebido desde que o serviço iniciou.</div>
+        </div>
+        <div class="cartao">
+          <div class="kpi-topo"><span class="kpi-rotulo">Configuração na Evolution</span><div class="icone-redondo azul"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div></div>
+          <div class="kpi-valor" id="rEvolution"><span class="pilula">Não verificado</span></div>
+          <div class="kpi-detalhe" id="rEvolutionDet" style="white-space:pre-wrap">Confere URL, eventos e opções do webhook.</div>
+          <div class="acoes" style="margin-top:12px"><button class="btn pequeno" type="button" id="btnVerificarWebhook">Verificar agora</button></div>
+        </div>
+        <div class="cartao">
+          <h2>Como testar</h2>
+          <ol style="margin:10px 0 0;padding-left:20px;color:var(--suave);font-size:13.5px">
+            <li>Envie uma mensagem na aba <b>Testar mensagem</b>.</li>
+            <li>No celular que recebeu, responda <b>SIM</b> (ou NÃO, SAIR…).</li>
+            <li>Em poucos segundos a resposta aparece abaixo, com o que o sistema entendeu.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="resultado aviso" style="margin-top:16px">
+        <span style="color:var(--ambar)"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span>
+        <div><b>Respostas automáticas</b><span>SIM recebe o voucher (texto + imagem); NÃO ou SAIR vão para a lista de bloqueados. Com o modo simulação ligado, só os números da lista de teste recebem respostas de verdade; para os demais, o sistema apenas registra o que faria.</span></div>
+      </div>
+      <div class="grade g2" style="margin-top:16px">
+        <div class="cartao">
+          <h2>Mensagens recebidas <span class="pilula sem-ponto" id="rTotal">0</span></h2>
+          <div class="rolagem" style="margin-top:10px"><table class="tabela"><thead><tr><th>Quando</th><th>Número</th><th>Mensagem</th><th>Entendido como</th></tr></thead><tbody id="tabelaRespostas"></tbody></table></div>
+        </div>
+        <div class="cartao">
+          <h2>Eventos recebidos</h2>
+          <p class="sub">Tudo o que a Evolution enviou para este programa (entregas, leituras, conexão).</p>
+          <ul class="passos" id="listaEventos"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VOUCHER ===== -->
+    <section data-pagina="voucher" class="oculto">
+      <div class="cabecalho"><div><h1>Voucher</h1><p>A imagem e o texto que o cliente recebe quando responde SIM.</p></div></div>
+      <div class="teste-grade">
+        <div class="grade">
+          <div class="cartao">
+            <h2>Imagem do voucher <span class="pilula" id="seloImagem">Sem imagem</span></h2>
+            <p class="sub">JPG ou PNG, até 5 MB. A mesma imagem vai para todos que responderem SIM.</p>
+            <label class="zona-imagem" id="zonaImagem" for="arquivoImagem">
+              <span id="zonaConteudo"><svg class="ic" viewBox="0 0 24 24" style="width:36px;height:36px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><br><b>Clique para escolher</b> ou arraste a imagem aqui</span>
+            </label>
+            <input type="file" id="arquivoImagem" accept="image/jpeg,image/png" class="oculto">
+            <p class="dica" id="infoImagem"></p>
+          </div>
+          <div class="cartao">
+            <h2>Dados da resposta</h2>
+            <label class="rotulo" for="endereco">Endereço da loja (aparece com o voucher)</label>
+            <input id="endereco" type="text" maxlength="200" placeholder="ex.: Shopping Vila Velha, loja 120">
+            <label class="rotulo" for="prazoDias">Bloquear quem não responder ao convite em</label>
+            <div class="campo-acao" style="max-width:260px;align-items:center"><input id="prazoDias" type="number" min="1" max="60" step="1"><span style="white-space:nowrap">dias</span></div>
+            <div class="acoes"><button class="btn primario" type="button" id="btnSalvarVoucher">Salvar</button></div>
+          </div>
+          <div class="cartao">
+            <h2>Como o sistema responde</h2>
+            <ul class="fluxo">
+              <li><span class="pilula ok sem-ponto">SIM</span><div><b>Envia o voucher</b><span>Texto com a oferta e, 3 a 5 segundos depois, a imagem.</span></div></li>
+              <li><span class="pilula erro sem-ponto">NÃO / SAIR</span><div><b>Bloqueia o número</b><span>Manda uma confirmação curta e nunca mais envia nada.</span></div></li>
+              <li><span class="pilula sem-ponto">Sem resposta</span><div><b>Bloqueia após o prazo</b><span id="textoPrazo">Quem não responder em 7 dias vai para a lista de bloqueados.</span></div></li>
+              <li><span class="pilula aviso sem-ponto">Outra coisa</span><div><b>Pede para responder SIM</b><span>Na segunda vez (ou áudio/foto), fica para a equipe responder.</span></div></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="celular" aria-label="Prévia da resposta no WhatsApp">
+          <div class="tela">
+            <div class="whats-topo"><div class="avatar">M</div><div><b>Mariana</b><small>online</small></div></div>
+            <div class="whats-conversa" id="conversaVoucher">
+              <span class="whats-dia">HOJE</span>
+              <div class="balao vazio-balao">A prévia aparece aqui.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== BLOQUEADOS ===== -->
+    <section data-pagina="bloqueados" class="oculto">
+      <div class="cabecalho"><div><h1>Lista de bloqueados</h1><p>Estes números nunca recebem convites nem respostas automáticas.</p></div></div>
+      <div class="grade g4" id="kpisBloqueio"></div>
+      <div class="cartao" style="margin-top:16px">
+        <h2>Bloquear um número</h2>
+        <p class="sub">Use quando o cliente pedir por outro canal (telefone, loja) para não receber mensagens.</p>
+        <div class="campo-acao" style="max-width:460px">
+          <input id="numeroBloqueio" type="tel" placeholder="DDD + número, ex.: 27 99988-7766">
+          <button class="btn" type="button" id="btnBloquear">Bloquear</button>
+        </div>
+      </div>
+      <div class="cartao" style="margin-top:16px">
+        <div class="rolagem"><table class="tabela"><thead><tr><th>Número</th><th>Cliente</th><th>Motivo</th><th>Desde</th><th></th></tr></thead><tbody id="tabelaBloqueados"></tbody></table></div>
+      </div>
+    </section>
+
     <!-- ===== FILA ===== -->
     <section data-pagina="fila" class="oculto">
       <div class="cabecalho">
@@ -545,6 +665,9 @@ textarea { min-height: 170px; resize: vertical; }
     if (pagina === 'inicio') { carregarResumo(); }
     if (pagina === 'fila') { carregarFila(); }
     if (pagina === 'teste') { carregarHistorico(); }
+    if (pagina === 'respostas') { carregarRespostas(); }
+    if (pagina === 'voucher') { carregarVoucher(); }
+    if (pagina === 'bloqueados') { carregarBloqueados(); }
     try { history.replaceState(null, '', '#' + pagina); } catch (e) {}
     window.scrollTo(0, 0);
   }
@@ -575,7 +698,12 @@ textarea { min-height: 170px; resize: vertical; }
       $('apiKey').placeholder = 'Atual: ' + c.evolution.chaveFinal;
       $('publicBaseUrl').value = c.webhook.publicBaseUrl;
       $('caminhoWebhook').textContent = c.webhook.caminho;
-      $('dicaRede').textContent = 'Na mesma rede da Evolution, use http://IP-deste-computador:' + c.webhook.porta + c.webhook.caminho;
+      $('urlsLocais').innerHTML = c.webhook.urlsLocais.map(function (u, i) {
+        return '<div class="campo-acao" style="margin-bottom:8px"><div class="codigo" id="urlLocal' + i + '" style="flex:1">' + esc(u) + '</div><button class="btn" type="button" data-copiar-local="urlLocal' + i + '">Copiar</button></div>';
+      }).join('') || '<p class="dica">Nenhuma rede encontrada.</p>';
+      $('urlsLocais').querySelectorAll('[data-copiar-local]').forEach(function (b) {
+        b.addEventListener('click', function () { copiarTexto($(b.getAttribute('data-copiar-local')).textContent); });
+      });
       $('urlCompletaBox').classList.toggle('oculto', !c.webhook.url);
       $('urlCompleta').textContent = c.webhook.url || '';
       $('loja').value = c.campanha.loja;
@@ -675,6 +803,7 @@ textarea { min-height: 170px; resize: vertical; }
       ['Definir o último dia da campanha', 'Usado no texto das mensagens.', !!r.campanha.dataFim, 'campanha'],
       ['Importar a listagem de clientes', 'Atalho "Importar listagem" no Menu Iniciar.', r.base.total > 0, null],
       ['Validar os números no WhatsApp', 'Atalho "Validar números" (não envia nada).', (r.base.status.PRONTO || 0) > 0, null],
+      ['Cadastrar a imagem do voucher', 'Enviada a quem responder SIM.', r.voucherCadastrado, 'voucher'],
       ['Enviar uma mensagem de teste', 'Confira como o cliente recebe.', r.testesEnviados > 0, 'teste'],
       ['Configurar o recebimento de respostas', 'Webhook na aba Conexão.', r.webhookInformado, 'conexao']
     ];
@@ -726,11 +855,11 @@ textarea { min-height: 170px; resize: vertical; }
     api('POST', 'webhook/registrar').then(function () { toast('ok', 'Webhook registrado na Evolution.'); carregarResumo(); })
       .catch(function (e) { toast('erro', e.message); }).then(function () { ocupado(b, false); });
   });
+  function copiarTexto(t) {
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast('ok', 'Copiado.'); }, function () { toast('erro', 'Selecione e copie manualmente.'); });
+  }
   document.querySelectorAll('[data-copiar]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var t = $(b.getAttribute('data-copiar')).textContent;
-      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast('ok', 'Copiado.'); }, function () { toast('erro', 'Selecione e copie manualmente.'); });
-    });
+    b.addEventListener('click', function () { copiarTexto($(b.getAttribute('data-copiar')).textContent); });
   });
 
   // ---------------- campanha ----------------
@@ -788,6 +917,9 @@ textarea { min-height: 170px; resize: vertical; }
 
   $('btnSalvarCampanha').addEventListener('click', function () {
     var ativa = $('ativa').checked, sim = $('dryRun').checked;
+    if (ativa && !sim && estado.resumo && !estado.resumo.voucherCadastrado) {
+      if (!confirm('A imagem do voucher ainda não foi cadastrada (aba Voucher).\\nQuem responder SIM ficará sem o voucher até você cadastrar.\\n\\nSalvar mesmo assim?')) { return; }
+    }
     if (ativa && !sim && !estado.allowlist.length) {
       if (!confirm('ATENÇÃO: campanha ativa, fora da simulação e sem lista de teste.\\nDepois de reiniciar o serviço, os convites serão enviados de verdade para TODOS os clientes da fila.\\n\\nConfirmar?')) { return; }
     }
@@ -853,7 +985,7 @@ textarea { min-height: 170px; resize: vertical; }
     if (!confirm('Enviar esta mensagem de verdade para ' + numero + '?')) { return; }
     var b = this; ocupado(b, true);
     api('POST', 'teste/enviar', { numero: numero, texto: texto }).then(function (r) {
-      toast('ok', 'Mensagem enviada para ' + r.telefone + '.' + (r.adicionadoNaLista ? '\\nO número entrou na lista de teste.' : ''));
+      toast('ok', 'Mensagem enviada para ' + r.telefone + '.' + (r.adicionadoNaLista ? '\\nO número entrou na lista de teste.' : '') + '\\nResponda pelo celular e confira na aba Respostas.');
       carregarHistorico(); carregarConfig();
     }).catch(function (e) { toast('erro', e.message); }).then(function () { ocupado(b, false); });
   });
@@ -865,6 +997,136 @@ textarea { min-height: 170px; resize: vertical; }
       }).join('') : '<tr><td colspan="3" class="vazio">Nenhum teste enviado ainda.</td></tr>';
     }).catch(function () {});
   }
+
+  // ---------------- respostas ----------------
+  var INTENCAO = {
+    SIM: ['SIM · quer o voucher', 'ok'], NAO: ['NÃO', 'aviso'],
+    OPT_OUT: ['SAIR · não enviar mais', 'erro'], DESCONHECIDO: ['Não entendido', '']
+  };
+  var ORIGEM = { CLIENTE: 'Cliente', TESTE: 'Número de teste', FORA_DA_BASE: 'Fora da base' };
+  function haQuanto(iso) {
+    var s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+    if (s < 60) { return 'há ' + s + ' s'; }
+    if (s < 3600) { return 'há ' + Math.round(s / 60) + ' min'; }
+    return new Date(iso).toLocaleString('pt-BR');
+  }
+  function carregarRespostas() {
+    api('GET', 'respostas').then(function (r) {
+      $('rTotal').textContent = fmt(r.total);
+      $('tabelaRespostas').innerHTML = r.itens.length ? r.itens.map(function (l) {
+        var it = INTENCAO[l.intencao] || [l.intencao, ''];
+        return '<tr><td style="white-space:nowrap">' + esc(haQuanto(l.quando)) + '</td><td><span style="font-family:Consolas,monospace">' + esc(l.telefone) + '</span><br><span class="dica">' +
+          esc(l.nome || ORIGEM[l.origem] || '') + '</span></td><td>' + esc(l.texto) + '</td><td><span class="pilula ' + it[1] + '">' + esc(it[0]) + '</span></td></tr>';
+      }).join('') : '<tr><td colspan="4" class="vazio">Nenhuma resposta ainda. Responda a mensagem de teste pelo celular.</td></tr>';
+    }).catch(function () {});
+    api('GET', 'webhook/monitor').then(function (m) {
+      var ult = m.eventos[0];
+      $('rStatus').innerHTML = ult ? '<span class="pilula ok">Recebendo</span>' : '<span class="pilula aviso">Nenhum evento ainda</span>';
+      $('rUltimo').textContent = ult ? 'Último evento ' + haQuanto(ult.quando) + ' · ' + fmt(m.total) + ' desde que o serviço iniciou.' :
+        'Nada chegou desde que o serviço iniciou. Confira a configuração na Evolution.';
+      $('listaEventos').innerHTML = m.eventos.length ? m.eventos.slice(0, 20).map(function (e) {
+        var bom = ['RESPOSTA_CLIENTE', 'RESPOSTA_FORA_DA_BASE', 'STATUS', 'CONEXAO', 'VOUCHER', 'BLOQUEADO', 'NAO_ENTENDIDO'].indexOf(e.resultado) >= 0;
+        return '<li class="' + (bom ? 'feito' : '') + '"><span class="marcador">' + ICON_OK + '</span><div class="txt"><b>' + esc(e.descricao) + '</b><span>' + esc(haQuanto(e.quando)) + ' · ' + esc(e.resultado) + '</span></div></li>';
+      }).join('') : '<li><div class="txt"><span>Nenhum evento recebido ainda.</span></div></li>';
+    }).catch(function () {});
+  }
+  $('btnVerificarWebhook').addEventListener('click', function () {
+    var b = this; ocupado(b, true);
+    $('rEvolution').innerHTML = '<span class="pilula">Verificando…</span>';
+    api('POST', 'webhook/verificar').then(function (r) {
+      $('rEvolution').innerHTML = r.ok ? '<span class="pilula ok">Tudo certo</span>' : '<span class="pilula erro">Precisa ajustar</span>';
+      $('rEvolutionDet').textContent = r.ok ? ('URL: ' + r.url) : r.problemas.join('\\n') + (r.url ? '\\nURL atual: ' + r.url : '');
+    }).catch(function (e) {
+      $('rEvolution').innerHTML = '<span class="pilula erro">Sem conexão</span>';
+      $('rEvolutionDet').textContent = e.message;
+    }).then(function () { ocupado(b, false); });
+  });
+  setInterval(function () {
+    var sec = document.querySelector('[data-pagina="respostas"]');
+    if (!document.hidden && sec && !sec.classList.contains('oculto') && !$('telaApp').classList.contains('oculto')) { carregarRespostas(); }
+  }, 5000);
+
+  // ---------------- voucher ----------------
+  function horaAgora() { return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+  function carregarVoucher() {
+    api('GET', 'voucher').then(function (v) {
+      $('endereco').value = v.endereco;
+      $('prazoDias').value = v.prazoDias;
+      $('textoPrazo').textContent = 'Quem não responder em ' + v.prazoDias + ' dia(s) vai para a lista de bloqueados.';
+      var temImg = !!v.imagem;
+      $('seloImagem').className = 'pilula ' + (temImg ? 'ok' : 'aviso');
+      $('seloImagem').textContent = temImg ? 'Cadastrada' : 'Sem imagem';
+      $('zonaConteudo').innerHTML = temImg
+        ? '<img alt="Imagem do voucher" src="/painel/api/voucher/imagem?t=' + Date.now() + '"><br><span class="dica">Clique ou arraste outra imagem para trocar</span>'
+        : '<svg class="ic" viewBox="0 0 24 24" style="width:36px;height:36px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><br><b>Clique para escolher</b> ou arraste a imagem aqui';
+      $('infoImagem').textContent = temImg ? (v.imagem.mimetype === 'image/png' ? 'PNG' : 'JPG') + ' · ' + Math.round(v.imagem.bytes / 1024) + ' KB · atualizada em ' + new Date(v.imagem.atualizadaEm).toLocaleString('pt-BR') : '';
+      desenharPreviaVoucher(temImg);
+    }).catch(function (e) { toast('erro', e.message); });
+  }
+  function desenharPreviaVoucher(temImg) {
+    api('POST', 'voucher/previa', { nome: 'Mariana' }).then(function (p) {
+      var h = horaAgora();
+      var img = temImg ? '<img alt="" src="/painel/api/voucher/imagem?t=' + Date.now() + '">' : '<div class="dica" style="padding:30px 8px;text-align:center">(imagem do voucher)</div>';
+      $('conversaVoucher').innerHTML = '<span class="whats-dia">HOJE</span>' +
+        '<div class="balao cliente">Sim, quero!<span class="hora">' + h + '</span></div>' +
+        '<div class="balao">' + whatsFormatar(p.r1) + '<span class="hora">' + h + ' ' + ICON_CHECK_DUPLO + '</span></div>' +
+        '<div class="balao">' + img + whatsFormatar(p.legenda) + '<span class="hora">' + h + ' ' + ICON_CHECK_DUPLO + '</span></div>';
+    }).catch(function (e) {
+      $('conversaVoucher').innerHTML = '<span class="whats-dia">HOJE</span><div class="balao vazio-balao">' + esc(e.message) + '</div>';
+    });
+  }
+  function enviarImagem(arquivo) {
+    if (!arquivo) { return; }
+    if (!/^image\\/(jpeg|png)$/.test(arquivo.type)) { toast('erro', 'Use uma imagem JPG ou PNG.'); return; }
+    if (arquivo.size > 5 * 1024 * 1024) { toast('erro', 'A imagem passa de 5 MB. Reduza o tamanho e envie de novo.'); return; }
+    var leitor = new FileReader();
+    leitor.onload = function () {
+      api('POST', 'voucher/imagem', { arquivo: String(leitor.result) }).then(function () {
+        toast('ok', 'Imagem do voucher salva.'); carregarVoucher();
+      }).catch(function (e) { toast('erro', e.message); });
+    };
+    leitor.readAsDataURL(arquivo);
+  }
+  $('arquivoImagem').addEventListener('change', function () { enviarImagem(this.files && this.files[0]); this.value = ''; });
+  ['dragenter', 'dragover'].forEach(function (t) { $('zonaImagem').addEventListener(t, function (ev) { ev.preventDefault(); $('zonaImagem').classList.add('arrastando'); }); });
+  ['dragleave', 'drop'].forEach(function (t) { $('zonaImagem').addEventListener(t, function () { $('zonaImagem').classList.remove('arrastando'); }); });
+  $('zonaImagem').addEventListener('drop', function (ev) { ev.preventDefault(); enviarImagem(ev.dataTransfer && ev.dataTransfer.files[0]); });
+  $('btnSalvarVoucher').addEventListener('click', function () {
+    salvar({ LOJA_ENDERECO: $('endereco').value, PRAZO_RESPOSTA_DIAS: $('prazoDias').value }, this).then(carregarVoucher, function () {});
+  });
+
+  // ---------------- bloqueados ----------------
+  function carregarBloqueados() {
+    api('GET', 'bloqueados').then(function (b) {
+      var m = b.porMotivo;
+      var kpis = [
+        ['Total bloqueados', b.total, ''], ['Responderam NÃO', m.RESPONDEU_NAO || 0, 'erro'],
+        ['Pediram para sair', m.PEDIU_SAIR || 0, 'erro'], ['Sem resposta no prazo', m.SEM_RESPOSTA || 0, 'aviso']
+      ];
+      $('kpisBloqueio').innerHTML = kpis.map(function (k) {
+        return '<div class="cartao"><span class="kpi-rotulo">' + k[0] + '</span><div class="kpi-valor">' + fmt(k[1]) + '</div></div>';
+      }).join('');
+      $('tabelaBloqueados').innerHTML = b.itens.length ? b.itens.map(function (l) {
+        var cor = l.motivo === 'SEM_RESPOSTA' ? 'aviso' : l.motivo === 'MANUAL' ? 'info' : 'erro';
+        return '<tr><td style="font-family:Consolas,monospace">' + esc(l.telefone) + '</td><td>' + esc(l.nome || '—') + '</td><td><span class="pilula ' + cor + '">' + esc(l.motivoTexto) +
+          '</span></td><td>' + esc(new Date(l.quando).toLocaleDateString('pt-BR')) + '</td><td style="text-align:right"><button class="btn pequeno perigo" type="button" data-desbloquear="' + l.id + '">Remover</button></td></tr>';
+      }).join('') : '<tr><td colspan="5" class="vazio">Nenhum número bloqueado.</td></tr>';
+      $('tabelaBloqueados').querySelectorAll('[data-desbloquear]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (!confirm('Remover este número da lista de bloqueados?\\nSó faça isso se a pessoa pediu para voltar a receber mensagens (ou se for um número de teste).')) { return; }
+          api('POST', 'bloqueados/remover', { id: Number(btn.getAttribute('data-desbloquear')) }).then(function () { toast('ok', 'Número removido da lista.'); carregarBloqueados(); })
+            .catch(function (e) { toast('erro', e.message); });
+        });
+      });
+    }).catch(function (e) { toast('erro', e.message); });
+  }
+  $('btnBloquear').addEventListener('click', function () {
+    var n = $('numeroBloqueio').value.trim();
+    if (!n) { return; }
+    api('POST', 'bloqueados', { numero: n }).then(function (r) {
+      toast('ok', r.novo ? 'Número bloqueado.' : 'Este número já estava bloqueado.'); $('numeroBloqueio').value = ''; carregarBloqueados();
+    }).catch(function (e) { toast('erro', e.message); });
+  });
 
   // ---------------- fila ----------------
   document.querySelectorAll('#segFila button').forEach(function (b) {
@@ -896,7 +1158,7 @@ textarea { min-height: 170px; resize: vertical; }
     $('saudacao').textContent = (h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite') + '! Situação da campanha em tempo real.';
     carregarConfig().then(function () {
       var pagina = (location.hash || '#inicio').slice(1);
-      irPara(['inicio', 'conexao', 'campanha', 'teste', 'fila'].indexOf(pagina) >= 0 ? pagina : 'inicio');
+      irPara(['inicio', 'conexao', 'campanha', 'teste', 'respostas', 'voucher', 'bloqueados', 'fila'].indexOf(pagina) >= 0 ? pagina : 'inicio');
       verificarWhats(true);
     });
     if (timer) { clearInterval(timer); }

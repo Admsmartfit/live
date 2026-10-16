@@ -1,0 +1,1 @@
+{Oi|Olá} {{nome}}! Seu voucher {continua valendo|ainda vale} até {{data_fim}}. {Aqui está de novo:|Te mando de novo:}

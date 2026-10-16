@@ -118,6 +118,10 @@ const restanteShape = {
 
   // Campanha (textos da seção 5)
   LOJA_NOME: z.string().min(1).default('LIVE! Vila Velha'),
+  // Endereço que aparece na resposta do voucher (R1). Vazio = linha omitida.
+  LOJA_ENDERECO: z.string().max(200).optional(),
+  // Quem não responder ao convite em X dias vai para a lista de bloqueados.
+  PRAZO_RESPOSTA_DIAS: inteiro(7, 1, 60),
   CAMPANHA_DATA_FIM: z.string().regex(DATA, 'use o formato AAAA-MM-DD').optional(),
   SEND_ORDER: z.enum(['SEGMENTO', 'IMPORTACAO']).default('SEGMENTO'),
 

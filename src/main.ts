@@ -1,15 +1,20 @@
 // Ponto de entrada do serviço:
-//   GET /health (RNF04) · painel em /painel (configuração e testes) ·
+//   GET /health (RNF04) · POST /webhook/:token (respostas, modo monitor) ·
+//   painel em /painel (configuração e testes) ·
 //   worker de envio, só com CAMPANHA_ATIVA=true (com DRY_RUN=true apenas simula).
 
 import { resolve } from 'node:path';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { registrarPainel } from './admin/routes.js';
-import { caminhoBanco, caminhoTemplates } from './config/campanha.js';
+import { envAtual } from './config/arquivoEnv.js';
+import { caminhoBanco, caminhoTemplates, pastaVoucher } from './config/campanha.js';
 import { loadEnv } from './config/env.js';
-import { abrirBanco, garantirCampanha } from './db/repo.js';
+import { abrirBanco, auditar, bloquearSemResposta, garantirCampanha } from './db/repo.js';
+import { limitePrazoIso } from './domain/respostas.js';
 import { carregarModelos } from './domain/templates.js';
 import { createEvolutionClient } from './evolution/client.js';
+import { Respondedor } from './inbound/respostas.js';
+import { MonitorWebhook, registrarWebhook } from './inbound/webhook.js';
 import { criarLog } from './log.js';
 import { WorkerEnvio } from './outbound/worker.js';
 
@@ -28,9 +33,42 @@ let estadoWorker = env.CAMPANHA_ATIVA ? 'iniciando' : 'desligado (CAMPANHA_ATIVA
 app.get('/health', () => ({ status: 'ok', dryRun: env.DRY_RUN, worker: estadoWorker }));
 app.get('/', (_req, reply) => reply.redirect('/painel'));
 
-registrarPainel(app, {
-  caminhoEnv: resolve(process.cwd(), '.env'),
+const caminhoEnv = resolve(process.cwd(), '.env');
+const monitor = new MonitorWebhook();
+const respondedor = new Respondedor({
+  db,
+  campanhaId,
+  env: () => envAtual(caminhoEnv),
+  criarEvolution: (e) => createEvolutionClient(e),
   caminhoTemplates,
+  pastaVoucher,
+  log,
+  monitor,
+});
+registrarWebhook(app, { db, campanhaId, token: env.WEBHOOK_TOKEN, instancia: env.EVOLUTION_INSTANCE, log, monitor, respondedor });
+
+// Quem não responde ao convite no prazo vai para a lista de bloqueados (verifica de hora em hora).
+const verificarPrazo = () => {
+  try {
+    const dias = envAtual(caminhoEnv).PRAZO_RESPOSTA_DIAS;
+    const n = bloquearSemResposta(db, campanhaId, limitePrazoIso(new Date(), dias));
+    if (n > 0) {
+      auditar(db, 'BLOQUEIO_SEM_RESPOSTA', { quantidade: n, dias }, 'SISTEMA');
+      log.info({ evento: 'BLOQUEIO_SEM_RESPOSTA', quantidade: n, dias });
+    }
+  } catch (err) {
+    log.error({ evento: 'PRAZO_ERRO', erro: String(err) });
+  }
+};
+verificarPrazo();
+const timerPrazo = setInterval(verificarPrazo, 60 * 60 * 1000);
+timerPrazo.unref();
+
+registrarPainel(app, {
+  monitor,
+  caminhoEnv,
+  caminhoTemplates,
+  pastaVoucher,
   db,
   campanhaId,
   envInicial: env,

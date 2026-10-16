@@ -1,0 +1,1 @@
+{Oi|Olá} {{nome}}! {Não entendi bem|Acho que não entendi}. {Para receber o voucher, é só responder *SIM*|Se quiser o voucher, responda *SIM*}. {Se preferir, a equipe da loja te responde por aqui em breve.|A equipe da loja também te responde por aqui em breve.}

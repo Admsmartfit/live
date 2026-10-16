@@ -83,3 +83,12 @@ export interface SetWebhookParams {
   byEvents?: boolean;
   base64?: boolean;
 }
+
+export interface WebhookAtual {
+  enabled: boolean;
+  url: string | null;
+  events: string[];
+  byEvents: boolean;
+  base64: boolean;
+  raw: unknown;
+}

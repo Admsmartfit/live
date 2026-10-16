@@ -1,6 +1,6 @@
 {
   "name": "campanha-whatsapp",
-  "version": "0.3.0",
+  "version": "0.5.3",
   "private": true,
   "type": "module",
   "engines": {
@@ -48,5 +48,5 @@
     "better-sqlite3@12.8.0": true,
     "esbuild@0.28.2": true
   },
-  "//better-sqlite3": "Fixado em 12.8.0: Ãºltima versÃ£o com binÃ¡rio pronto para Node 20 (ABI 115). A 12.10+ sÃ³ tem para Node 22+."
+  "//better-sqlite3": "Fixado em 12.8.0: ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltima versÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o com binÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio pronto para Node 20 (ABI 115). A 12.10+ sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ tem para Node 22+."
 }

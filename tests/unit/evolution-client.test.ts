@@ -258,6 +258,18 @@ describe('EvolutionClient — rotas e contratos (seção 10)', () => {
     expect(f).not.toHaveBeenCalled();
   });
 
+  it('findWebhook lê a configuração atual da instância', async () => {
+    const f = mockFetch({
+      corpo: { enabled: true, url: 'https://x.test/webhook/tok', events: ['MESSAGES_UPSERT'], webhookByEvents: false },
+    });
+    const { client } = criar(f);
+    expect(await client.findWebhook()).toMatchObject({ enabled: true, url: 'https://x.test/webhook/tok', events: ['MESSAGES_UPSERT'] });
+    expect(chamada(f).url).toBe(`${BASE}/webhook/find/${INSTANCIA_URL}`);
+
+    const vazio = criar(mockFetch({ corpo: undefined })).client;
+    expect(await vazio.findWebhook()).toBeNull();
+  });
+
   it('createEvolutionClient usa as variáveis de ambiente', async () => {
     const f = mockFetch({ corpo: { state: 'open' } });
     const client = createEvolutionClient(

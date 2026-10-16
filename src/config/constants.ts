@@ -26,6 +26,7 @@ export const STATUS_CLIENTE = [
   'AGUARDANDO_HUMANO',
   'ESGOTADO',
   'NAO_CONTATADO',
+  'SEM_RESPOSTA',
 ] as const;
 export type StatusCliente = (typeof STATUS_CLIENTE)[number];
 

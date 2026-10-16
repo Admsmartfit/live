@@ -7,7 +7,7 @@ import { Sessoes } from '../../src/admin/auth.js';
 import { registrarPainel, type ClientePainel } from '../../src/admin/routes.js';
 import { atualizarTextoEnv, lerArquivoEnv } from '../../src/config/arquivoEnv.js';
 import { envSchema, parseEnv } from '../../src/config/env.js';
-import { abrirBanco, garantirCampanha } from '../../src/db/repo.js';
+import { abrirBanco, garantirCampanha, type Banco } from '../../src/db/repo.js';
 import { EvolutionError } from '../../src/evolution/errors.js';
 
 const SENHA = 'senha-de-teste-123';
@@ -42,6 +42,7 @@ describe('painel', () => {
   let cliente: { [K in keyof ClientePainel]: ReturnType<typeof vi.fn> };
   let sair: ReturnType<typeof vi.fn<(codigo: number) => void>>;
   let cookie = '';
+  let db: Banco;
   let enviados = 0;
 
   beforeEach(async () => {
@@ -54,14 +55,18 @@ describe('painel', () => {
       connectionState: vi.fn(() => Promise.resolve({ state: 'open', raw: {} })),
       sendText: vi.fn(() => Promise.resolve({ messageId: `MSG${String(++enviados)}`, remoteJid: null, raw: {} })),
       setWebhook: vi.fn(() => Promise.resolve({})),
+      findWebhook: vi.fn(() =>
+        Promise.resolve({ enabled: true, url: `https://x.test/webhook/${'t'.repeat(32)}`, events: ['MESSAGES_UPSERT'], byEvents: false, base64: false, raw: {} }),
+      ),
     };
     sair = vi.fn<(codigo: number) => void>();
     app = Fastify();
-    const db = abrirBanco(':memory:');
+    db = abrirBanco(':memory:');
     const campanhaId = garantirCampanha(db, { nome: 'teste', dataLimite: '2026-10-31', hoje: '2026-10-16' });
     registrarPainel(app, {
       caminhoEnv,
       caminhoTemplates: () => resolve('templates'),
+      pastaVoucher: () => join(dir, 'voucher'),
       db,
       campanhaId,
       envInicial: parseEnv(envSchema, lerArquivoEnv(caminhoEnv)),
@@ -159,6 +164,13 @@ describe('painel', () => {
     expect(cliente.sendText).not.toHaveBeenCalled();
   });
 
+  it('recusa o endereço da própria Evolution como endereço público', async () => {
+    const r = await chamar('POST', 'config', { valores: { PUBLIC_BASE_URL: 'https://evolution.exemplo.test/' } });
+    expect(r.statusCode).toBe(400);
+    expect(r.json<{ erro: string }>().erro).toMatch(/DESTE computador/);
+    expect(lerArquivoEnv(caminhoEnv).PUBLIC_BASE_URL).toBeUndefined();
+  });
+
   it('registra o webhook só com endereço público', async () => {
     expect((await chamar('POST', 'webhook/registrar')).statusCode).toBe(400);
     await chamar('POST', 'config', { valores: { PUBLIC_BASE_URL: 'https://campanha.exemplo.test' } });
@@ -181,6 +193,66 @@ describe('painel', () => {
     expect(lerArquivoEnv(caminhoEnv)).toMatchObject({ CAMPANHA_ATIVA: 'true', TEST_ALLOWLIST: '5527988776655' });
     expect((await chamar('GET', 'config')).json()).toMatchObject({ campanha: { ativa: true, allowlist: ['5527988776655'] }, reinicioPendente: true });
     expect((await chamar('POST', 'config', { valores: { CHAVE_DESCONHECIDA: 'x' } })).statusCode).toBe(400);
+  });
+
+  it('verifica o webhook na Evolution e aponta problemas', async () => {
+    const r = (await chamar('POST', 'webhook/verificar')).json<{ ok: boolean; problemas: string[] }>();
+    expect(r.ok).toBe(false);
+    expect(r.problemas.join(' ')).toMatch(/MESSAGES_UPDATE/);
+    cliente.findWebhook.mockResolvedValueOnce({
+      enabled: true,
+      url: `https://evolution.exemplo.test/webhook/${'t'.repeat(32)}`,
+      events: ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CONNECTION_UPDATE'],
+      byEvents: false,
+      base64: false,
+      raw: {},
+    });
+    expect((await chamar('POST', 'webhook/verificar')).json()).toMatchObject({ ok: false, problemas: [expect.stringMatching(/própria Evolution/) as unknown] });
+    const eventos = ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CONNECTION_UPDATE'];
+    const comUrl = (url: string) => ({ enabled: true, url, events: eventos, byEvents: false, base64: false, raw: {} });
+    cliente.findWebhook.mockResolvedValueOnce(comUrl(`https://192.100.0.104/webhook/${'t'.repeat(32)}`));
+    expect((await chamar('POST', 'webhook/verificar')).json()).toMatchObject({ ok: false, problemas: [expect.stringMatching(/não usa https/) as unknown] });
+    cliente.findWebhook.mockResolvedValueOnce(comUrl(`http://192.168.0.50/webhook/${'t'.repeat(32)}`));
+    expect((await chamar('POST', 'webhook/verificar')).json()).toMatchObject({ ok: false, problemas: [expect.stringMatching(/Falta a porta :3000/) as unknown] });
+    cliente.findWebhook.mockResolvedValueOnce(comUrl(`http://192.168.0.50:3000/webhook/${'t'.repeat(32)}`));
+    expect((await chamar('POST', 'webhook/verificar')).json()).toMatchObject({ ok: true });
+    cliente.findWebhook.mockResolvedValueOnce(null);
+    expect((await chamar('POST', 'webhook/verificar')).json()).toMatchObject({ ok: false, problemas: [expect.stringMatching(/Nenhum/) as unknown] });
+  });
+
+  it('lista respostas recebidas, marcando número de teste', async () => {
+    await chamar('POST', 'config', { valores: { TEST_ALLOWLIST: '5527988776655' } });
+    db.prepare("INSERT INTO inbound_desconhecido (jid, texto) VALUES ('5527988776655', 'Sim, quero!')").run();
+    const r = (await chamar('GET', 'respostas')).json<{ total: number; itens: unknown[] }>();
+    expect(r.total).toBe(1);
+    expect(r.itens[0]).toMatchObject({ telefone: '5527*****6655', origem: 'TESTE', intencao: 'SIM', texto: 'Sim, quero!' });
+    expect((await chamar('GET', 'resumo')).json()).toMatchObject({ webhookInformado: true });
+  });
+
+  it('recebe a imagem do voucher, mostra e gera a prévia das respostas', async () => {
+    const jpg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+    expect((await chamar('GET', 'voucher')).json()).toMatchObject({ imagem: null });
+    expect((await chamar('POST', 'voucher/imagem', { arquivo: Buffer.from('texto').toString('base64') })).statusCode).toBe(400);
+    const ok = await chamar('POST', 'voucher/imagem', { arquivo: `data:image/jpeg;base64,${jpg.toString('base64')}` });
+    expect(ok.json()).toMatchObject({ ok: true, bytes: jpg.length });
+    const img = await app.inject({ method: 'GET', url: '/painel/api/voucher/imagem', headers: { cookie } });
+    expect(img.headers['content-type']).toBe('image/jpeg');
+    expect(img.rawPayload.equals(jpg)).toBe(true);
+    expect((await chamar('GET', 'resumo')).json()).toMatchObject({ voucherCadastrado: true });
+    const previa = (await chamar('POST', 'voucher/previa', { nome: 'Joana' })).json<Record<string, string>>();
+    expect(previa.r1).toContain('Joana');
+    expect(previa.r2).toContain('Joana');
+  });
+
+  it('lista de bloqueados: adiciona, lista e remove; número bloqueado não recebe teste', async () => {
+    expect((await chamar('POST', 'bloqueados', { numero: '27 98877-6655' })).json()).toMatchObject({ ok: true, novo: true });
+    const lista = (await chamar('GET', 'bloqueados')).json<{ total: number; itens: { id: number; telefone: string; motivoTexto: string }[] }>();
+    expect(lista.total).toBe(1);
+    expect(lista.itens[0]).toMatchObject({ telefone: '5527*****6655', motivoTexto: 'Bloqueado no painel' });
+    expect((await chamar('POST', 'teste/enviar', { numero: '27988776655', texto: 'oi' })).statusCode).toBe(409);
+    expect(cliente.sendText).not.toHaveBeenCalled();
+    expect((await chamar('POST', 'bloqueados/remover', { id: lista.itens[0]?.id })).statusCode).toBe(200);
+    expect((await chamar('GET', 'bloqueados')).json()).toMatchObject({ total: 0 });
   });
 
   it('reiniciar encerra o processo com código de falha (o serviço volta sozinho)', async () => {

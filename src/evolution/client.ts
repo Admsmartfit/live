@@ -14,6 +14,7 @@ import type {
   SendTextParams,
   SetWebhookParams,
   VersaoApi,
+  WebhookAtual,
 } from './types.js';
 
 export interface EvolutionClientOptions {
@@ -204,6 +205,23 @@ export class EvolutionClient {
       },
       repeticao: 'sempre',
     });
+  }
+
+  /** GET /webhook/find/{instancia} — webhook configurado na instância (null se nenhum). */
+  async findWebhook(): Promise<WebhookAtual | null> {
+    const raw = await this.request({ metodo: 'GET', rota: this.rotaInstancia('/webhook/find'), repeticao: 'sempre' });
+    const r = registro(raw);
+    if (!r) return null;
+    const w = registro(r.webhook) ?? r;
+    const eventos = Array.isArray(w.events) ? w.events.filter((x): x is string => typeof x === 'string') : [];
+    return {
+      enabled: w.enabled === true,
+      url: typeof w.url === 'string' && w.url !== '' ? w.url : null,
+      events: eventos,
+      byEvents: w.webhookByEvents === true || w.byEvents === true,
+      base64: w.webhookBase64 === true || w.base64 === true,
+      raw,
+    };
   }
 
   // ---------------------------------------------------------------- interno

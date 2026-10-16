@@ -18,6 +18,11 @@ export function caminhoBanco(env: Pick<Env, 'DATA_DIR'>): string {
   return resolve(process.cwd(), env.DATA_DIR, 'campanha.db');
 }
 
+/** Pasta da imagem do voucher enviada pelo painel. */
+export function pastaVoucher(env: Pick<Env, 'DATA_DIR'>): string {
+  return resolve(process.cwd(), env.DATA_DIR, 'voucher');
+}
+
 export function caminhoTemplates(env: Pick<Env, 'TEMPLATES_DIR'>): string {
   return resolve(process.cwd(), env.TEMPLATES_DIR);
 }

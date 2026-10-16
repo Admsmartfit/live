@@ -1,0 +1,8 @@
+{Oba|Eba|Que bom}, {{nome}}! 💚 {Aqui está|Segue} o seu voucher de despedida.
+
+✅ *35% off* na coleção nova e nas peças permanentes
+✅ *50% off* em todas as outras peças
+📅 Válido até *{{data_fim}}* ou enquanto houver estoque
+📍 {{endereco}}
+
+{É só mostrar a imagem no caixa.|Mostre a imagem no caixa e pronto.} {Salva nosso número para não perder!|Salve este contato para não perder o voucher.} {Quer que eu já separe algum tamanho para você?|Se quiser, me fala seu tamanho que eu separo!}

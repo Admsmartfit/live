@@ -27,15 +27,17 @@ const TRANSICOES: Readonly<Record<StatusCliente, readonly StatusCliente[]>> = {
   ENVIANDO: ['ENVIADO', 'ERRO', 'SEM_WHATSAPP', 'VERIFICAR'],
   ERRO: ['ENVIANDO', 'ESGOTADO', 'SUPRIMIDO', 'NAO_CONTATADO'],
   VERIFICAR: ['ENVIADO', 'PRONTO'],
-  ENVIADO: ['VOUCHER_ENVIANDO', 'DESCONHECIDO_1X', 'AGUARDANDO_HUMANO'],
+  ENVIADO: ['VOUCHER_ENVIANDO', 'DESCONHECIDO_1X', 'AGUARDANDO_HUMANO', 'SEM_RESPOSTA'],
   DESCONHECIDO_1X: ['VOUCHER_ENVIANDO', 'AGUARDANDO_HUMANO'],
-  VOUCHER_ENVIANDO: ['VOUCHER_ENVIADO'],
+  VOUCHER_ENVIANDO: ['VOUCHER_ENVIADO', 'AGUARDANDO_HUMANO'],
   VOUCHER_ENVIADO: ['VOUCHER_ENVIANDO'],
   AGUARDANDO_HUMANO: ['VOUCHER_ENVIANDO'],
   SEM_WHATSAPP: [],
   SUPRIMIDO: [],
   ESGOTADO: [],
   NAO_CONTATADO: [],
+  // Bloqueado por não responder no prazo; se responder depois, uma pessoa decide.
+  SEM_RESPOSTA: ['AGUARDANDO_HUMANO'],
   OPT_OUT: [],
 };
 
@@ -294,4 +296,34 @@ export function contagem(db: Banco, campanhaId: number, coluna: 'status' | 'segm
     .prepare(`SELECT COALESCE(${coluna}, '-') AS k, COUNT(*) AS n FROM clientes WHERE campanha_id = ? GROUP BY 1 ORDER BY 2 DESC`)
     .all(campanhaId) as { k: string; n: number }[];
   return Object.fromEntries(linhas.map((l) => [l.k, l.n]));
+}
+
+// ------------------------------------------------------------ lista de bloqueados (supressao)
+
+export type MotivoBloqueio = 'RESPONDEU_NAO' | 'PEDIU_SAIR' | 'SEM_RESPOSTA' | 'MANUAL';
+
+export function bloquear(db: Banco, telefone: string, motivo: MotivoBloqueio): boolean {
+  return db.prepare('INSERT OR IGNORE INTO supressao (telefone, motivo) VALUES (?, ?)').run(telefone, motivo).changes === 1;
+}
+
+export function estaBloqueado(db: Banco, telefone: string): boolean {
+  return db.prepare('SELECT 1 FROM supressao WHERE telefone = ?').get(telefone) !== undefined;
+}
+
+/**
+ * Convites sem nenhuma resposta até `limiteIso` → SEM_RESPOSTA e lista de bloqueados.
+ * Devolve quantos foram bloqueados.
+ */
+export function bloquearSemResposta(db: Banco, campanhaId: number, limiteIso: string, agoraIso = new Date().toISOString()): number {
+  const vencidos = db
+    .prepare("SELECT id, telefone FROM clientes WHERE campanha_id = ? AND status = 'ENVIADO' AND enviado_em < ?")
+    .all(campanhaId, limiteIso) as { id: number; telefone: string }[];
+  const aplicar = db.transaction(() => {
+    for (const c of vencidos) {
+      transicionar(db, c.id, 'SEM_RESPOSTA', {}, agoraIso);
+      bloquear(db, c.telefone, 'SEM_RESPOSTA');
+    }
+  });
+  aplicar();
+  return vencidos.length;
 }
